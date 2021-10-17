@@ -18,6 +18,15 @@ const UserSchema = new Schema({
     password:{
         type: String,
         required: true
+    },
+    profilepic:{
+        type: String
+    },
+    followers:{
+        type: Array
+    },
+    posts:{
+        type: Array
     }
 });
 

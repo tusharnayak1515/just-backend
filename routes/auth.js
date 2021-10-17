@@ -58,6 +58,7 @@ router.post(
         name: req.body.name,
         email: req.body.email,
         password: securePassword,
+        profilepic: req.body.profilepic
       });
       const data = {
         user: {

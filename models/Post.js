@@ -2,7 +2,7 @@
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
-const NoteSchema = new Schema({
+const PostSchema = new Schema({
     user:{
         type: Schema.Types.ObjectId,
         ref: 'user'
@@ -25,4 +25,4 @@ const NoteSchema = new Schema({
     }
 });
 
-module.exports = mongoose.model('note',NoteSchema);
+module.exports = mongoose.model('post',PostSchema);
