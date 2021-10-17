@@ -7,17 +7,12 @@ const PostSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'user'
     },
-    title:{
+    image: {
         type: String,
         required: true
     },
-    description:{
-        type: String,
-        required: true
-    },
-    tag:{
-        type: String,
-        default: "General"
+    caption:{
+        type: String
     },
     date:{
         type: Date,
