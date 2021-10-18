@@ -14,6 +14,9 @@ const PostSchema = new Schema({
     caption:{
         type: String
     },
+    location:{
+        type: String
+    },
     date:{
         type: Date,
         default: Date.now

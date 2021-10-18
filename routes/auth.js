@@ -19,6 +19,7 @@ router.post(
     body("username", "Enter a valid username").isLength({ min: 5 }),
     body("name", "Enter a valid name").isLength({ min: 3 }),
     body("email", "Enter a valid email").isEmail(),
+    body("email", "Enter a valid phone number").isLength({ min: 10 }),
     body("password", "Enter a valid password")
       .isLength({ min: 8 })
       .matches(/^[a-zA-Z0-9!@#$%^&*]{6,16}$/),
@@ -31,25 +32,35 @@ router.post(
       return res.json({ success, errors: errors.array(), status: 400 });
     }
     try {
-      let user = await User.findOne({ email: req.body.email, username: req.body.username });
+      let user = await User.findOne({ email: req.body.email, username: req.body.username, phone: req.body.phone });
       if (user) {
         success = false;
         return res.json({
           success,
-          error: "This email or username is associated to another account",
+          error: "This email is associated to another account",
           status: 400,
         });
       }
 
-    //   let user1 = await User.findOne({ username: req.body.username });
-    //   if (user1) {
-    //     success = false;
-    //     return res.json({
-    //       success,
-    //       error: "This username is already taken",
-    //       status: 400,
-    //     });
-    //   }
+      let user1 = await User.findOne({ username: req.body.username });
+      if (user1) {
+        success = false;
+        return res.json({
+          success,
+          error: "This username is already taken",
+          status: 400,
+        });
+      }
+
+      let user2 = await User.findOne({ phone: req.body.phone });
+      if (user2) {
+        success = false;
+        return res.json({
+          success,
+          error: "This phone is associated to another account",
+          status: 400,
+        });
+      }
 
       const salt = await bcrypt.genSalt(10);
       const securePassword = await bcrypt.hash(req.body.password, salt);
@@ -57,8 +68,8 @@ router.post(
         username: req.body.username,
         name: req.body.name,
         email: req.body.email,
-        password: securePassword,
-        profilepic: req.body.profilepic
+        phone: req.body.phone,
+        password: securePassword
       });
       const data = {
         user: {
@@ -122,6 +133,7 @@ router.post(
     }
   }
 );
+
 // ROUTE-3: Get logged-in user details using: POST "/api/auth/profile". Require Login
 router.post("/profile", fetchUser, async (req, res) => {
   let success = false;
@@ -130,6 +142,33 @@ router.post("/profile", fetchUser, async (req, res) => {
     const user = await User.findById(userId);
     success = true;
     res.send({ success, user, status: 200 });
+  } catch (error) {
+    success = false;
+    res.send({ success, error: "Internal Server Error", status: 500 });
+  }
+});
+
+// ROUTE-4: Add following using: POST "/api/auth/addfollowing". Require Login
+router.post("/addfollowing",[
+  body("adduser", "Enter a valid user").exists(),
+], fetchUser, async (req, res) => {
+  let success = false;
+  try {
+    const userId = req.user.id;
+    const user = await User.findById(userId);
+    const followeduser = await User.findById(req.body.adduser);
+    if(user.about.following.includes(req.body.adduser) === false ) {
+      user.about.following.push(req.body.adduser);
+      const saveduser = await user.save();
+      followeduser.about.followers.push(userId);
+      const savedfollower = await followeduser.save();
+      success = true;
+      res.send({ success, saveduser, status: 200 });
+    }
+    else {
+      success = false;
+      res.send({ success, error: "You are already following this user! ", status: 500 });
+    }
   } catch (error) {
     success = false;
     res.send({ success, error: "Internal Server Error", status: 500 });
