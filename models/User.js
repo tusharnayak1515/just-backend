@@ -23,6 +23,18 @@ const UserSchema = new Schema({
         type: String,
         required: true
     },
+    followers:[
+        {
+            type: Schema.Types.ObjectId,
+            ref: 'user'
+        }
+    ],
+    following:[
+        {
+            type: Schema.Types.ObjectId,
+            ref: 'user'
+        }
+    ],
     about:{
         profilepic:{
             type: String,
@@ -30,12 +42,6 @@ const UserSchema = new Schema({
         },
         bio:{
             type: String
-        },
-        followers:{
-            type: Array
-        },
-        following:{
-            type: Array
         },
         posts:{
             type: Array
