@@ -19,7 +19,7 @@ router.post(
     body("username", "Enter a valid username").isLength({ min: 5 }),
     body("name", "Enter a valid name").isLength({ min: 3 }),
     body("email", "Enter a valid email").isEmail(),
-    body("email", "Enter a valid phone number").isLength({ min: 10 }),
+    body("phone", "Enter a valid phone number").isLength({ min: 10 }),
     body("password", "Enter a valid password")
       .isLength({ min: 8 })
       .matches(/^[a-zA-Z0-9!@#$%^&*]{6,16}$/),
@@ -32,7 +32,7 @@ router.post(
       return res.json({ success, errors: errors.array(), status: 400 });
     }
     try {
-      let user = await User.findOne({ email: req.body.email, username: req.body.username, phone: req.body.phone });
+      let user = await User.findOne({ email: req.body.email });
       if (user) {
         success = false;
         return res.json({
@@ -80,7 +80,7 @@ router.post(
       success = true;
       res.json({ success, authToken, status: 200 });
     } catch (err) {
-        res.send({ error: "Internal Server Error", status: 500 });
+      res.send({ error: "Internal Server Error", status: 500 });
     }
   }
 );
@@ -140,11 +140,11 @@ router.post("/profile", fetchUser, async (req, res) => {
   try {
     const userId = req.user.id;
     const user = await User.findById(userId);
-    // user.about.followers.map(async (user1)=> {
+    // user.followers.map(async (user1)=> {
     //   const targetUser = await User.findById(user1);
     //   console.log(targetUser.about.posts);
     // });
-    // user.about.following.map(async (user1)=> {
+    // user.following.map(async (user1)=> {
     //   const targetUser = await User.findById(user1);
     //   console.log(targetUser.about.posts);
     // });
@@ -157,7 +157,7 @@ router.post("/profile", fetchUser, async (req, res) => {
 });
 
 // ROUTE-4: Add following using: PUT "/api/auth/addfollowing". Require Login
-router.put("/addfollowing",[
+router.put("/addfollowing", [
   body("adduser", "Enter a valid user").exists(),
 ], fetchUser, async (req, res) => {
   let success = false;
@@ -165,7 +165,7 @@ router.put("/addfollowing",[
     const userId = req.user.id;
     const user = await User.findById(userId);
     const followeduser = await User.findById(req.body.adduser);
-    if(!user.following.includes(req.body.adduser)) {
+    if (!user.following.includes(req.body.adduser)) {
       user.following.push(req.body.adduser);
       const saveduser = await user.save();
       followeduser.followers.push(userId);
@@ -184,7 +184,7 @@ router.put("/addfollowing",[
 });
 
 // ROUTE-5: Remove following using: PUT "/api/auth/unfollow". Require Login
-router.put("/unfollow",[
+router.put("/unfollow", [
   body("removeuser", "Enter a valid user").exists(),
 ], fetchUser, async (req, res) => {
   let success = false;
@@ -192,9 +192,9 @@ router.put("/unfollow",[
     const userId = req.user.id;
     const user = await User.findById(userId);
     const followeduser = await User.findById(req.body.removeuser);
-    if(user.following.includes(req.body.removeuser)) {
-      const saveduser = await user.updateOne({ $pull: {following: req.body.removeuser} } )
-      const savedfollower = await followeduser.updateOne({ $pull: {followers: userId} } )
+    if (user.following.includes(req.body.removeuser)) {
+      const saveduser = await user.updateOne({ $pull: { following: req.body.removeuser } })
+      const savedfollower = await followeduser.updateOne({ $pull: { followers: userId } })
       success = true;
       res.send({ success, saveduser, status: 200 });
     }
@@ -216,8 +216,8 @@ router.get("/getSuggestion", fetchUser, async (req, res) => {
     const user = await User.findById(userId);
     const suggestedUsers = [];
     const allUsers = await User.find({});
-    allUsers.map(user1=> {
-      if(!user.about.following.includes(user1)) {
+    allUsers.map(user1 => {
+      if (!user.about.following.includes(user1)) {
         suggestedUsers.push(user1);
       }
     });
@@ -225,6 +225,90 @@ router.get("/getSuggestion", fetchUser, async (req, res) => {
   } catch (error) {
     success = false;
     res.send({ success, error: "Internal Server Error", status: 500 });
+  }
+});
+
+// ROUTE-7: Edit user details using: PUT "/api/auth/editProfile". Require Login
+router.put("/editProfile", [
+  body("username", "Enter a valid username").isLength({ min: 5 }),
+  body("name", "Enter a valid name").isLength({ min: 3 }),
+  body("email", "Enter a valid email").isEmail(),
+  body("phone", "Enter a valid phone number").isLength({ min: 10 }),
+], fetchUser, async (req, res) => {
+  let success = false;
+  try {
+    const userId = req.user.id;
+    let user = await User.findById(userId);
+    let user1 = await User.findOne({ email: req.body.email });
+    if (user1 && user1._id.toString() !== userId) {
+      success = false;
+      return res.json({
+        success,
+        error: "This email is associated to another account",
+        status: 400,
+      });
+    }
+
+    let user2 = await User.findOne({ username: req.body.username });
+    if (user2 && user2._id.toString() !== userId) {
+      success = false;
+      return res.json({
+        success,
+        error: "This username is already taken",
+        status: 400,
+      });
+    }
+
+    let user3 = await User.findOne({ phone: req.body.phone });
+    if (user3 && user3._id.toString() !== userId) {
+      success = false;
+      return res.json({
+        success,
+        error: "This phone is associated to another account",
+        status: 400,
+      });
+    }
+
+    let { username,name,email,phone } = req.body;
+    
+    let newuser = { profilepic: "", username: "", name: "", email: "", phone: "" };
+
+    if (req.body.profilepic) {
+      newuser.profilepic = req.body.profilepic;
+    }
+
+    if (req.body.username) {
+      newuser.username = username;
+    }
+
+    if (req.body.name) {
+      newuser.name = name;
+    }
+
+    if (req.body.email) {
+      newuser.email = email;
+    }
+
+    if (req.body.phone) {
+      newuser.phone = phone;
+    }
+
+    if (!user) {
+      success = false;
+      return res.send({ success, error: "Not Found", status: 404 });
+    }
+
+    if (user._id.toString() !== req.user.id) {
+      success = false;
+      return res.send({ success, error: "This is not allowed", status: 401 })
+    }
+
+    user = await User.findByIdAndUpdate(userId, { $set: newuser }, { new: true })
+    success = true;
+    res.send({ success, user, status: 200 });
+  } catch (error) {
+    success = false;
+    res.send({ success, error: error.message, status: 500 });
   }
 });
 
