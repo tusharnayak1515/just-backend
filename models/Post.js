@@ -12,10 +12,12 @@ const PostSchema = new Schema({
         required: true
     },
     caption:{
-        type: String
+        type: String,
+        default: ""
     },
     location:{
-        type: String
+        type: String,
+        default: ""
     },
     date:{
         type: Date,

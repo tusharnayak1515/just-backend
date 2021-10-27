@@ -35,16 +35,20 @@ const UserSchema = new Schema({
             ref: 'user'
         }
     ],
+    posts:[
+        {
+            type: Schema.Types.ObjectId,
+            ref: 'post',
+        }
+    ],
     about:{
         profilepic:{
             type: String,
             default: null
         },
         bio:{
-            type: String
-        },
-        posts:{
-            type: Array
+            type: String,
+            default: ""
         }
     }
 });
