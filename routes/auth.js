@@ -165,18 +165,28 @@ router.put("/addfollowing", [
     const userId = req.user.id;
     const user = await User.findById(userId);
     const followeduser = await User.findById(req.body.adduser);
-    if (!user.following.includes(req.body.adduser)) {
-      user.following.push(req.body.adduser);
-      const saveduser = await user.save();
-      followeduser.followers.push(userId);
-      const savedfollower = await followeduser.save();
-      success = true;
-      res.send({ success, saveduser, status: 200 });
+
+    if (userId === req.body.adduser) {
+      success = false;
+      res.send({ success, error: "You cannot follow youself", status: 405 });
     }
     else {
-      success = false;
-      res.send({ success, error: "You are already following this user! ", status: 500 });
+      
+      if(!user.following.includes(req.body.adduser)) {
+        user.following.push(req.body.adduser);
+        const saveduser = await user.save();
+        followeduser.followers.push(userId);
+        const savedfollower = await followeduser.save();
+        success = true;
+        res.send({ success, saveduser, status: 200 });
+      }
+
+      else {
+        success = false;
+        res.send({ success, error: "You are already following this user! ", status: 500 });
+      }
     }
+
   } catch (error) {
     success = false;
     res.send({ success, error: "Internal Server Error", status: 500 });
