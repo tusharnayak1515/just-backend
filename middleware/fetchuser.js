@@ -17,7 +17,7 @@ const fetchUser = (req, res, next)=> {
     }
     catch(error) {
         success = false;
-        return res.json({success, error: "Please authenticate using a valid token",status: 401});
+        return res.json({success, error: error.message,status: 401});
     }
 }
 

@@ -135,7 +135,7 @@ router.post(
 );
 
 // ROUTE-3: Get logged-in user details using: POST "/api/auth/profile". Require Login
-router.post("/profile", fetchUser, async (req, res) => {
+router.get("/profile", fetchUser, async (req, res) => {
   let success = false;
   try {
     const userId = req.user.id;
@@ -149,7 +149,7 @@ router.post("/profile", fetchUser, async (req, res) => {
     //   console.log(targetUser.about.posts);
     // });
     success = true;
-    res.send({ success, user, status: 200 });
+    res.json({ success, user, status: 200 });
   } catch (error) {
     success = false;
     res.send({ success, error: "Internal Server Error", status: 500 });
