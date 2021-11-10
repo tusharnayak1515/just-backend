@@ -322,4 +322,41 @@ router.put("/editProfile", [
   }
 });
 
+// ROUTE-8: Add Profile Picture using: PUT "/api/auth/adddp". Require Login
+router.put("/adddp", [
+  body("image", "Enter a valid image").exists(),
+], fetchUser, async (req, res) => {
+  let success = false;
+  try {
+    const userId = req.user.id;
+    let user = await User.findById(userId);
+    
+    if (!user) {
+      success = false;
+      return res.send({ success, error: "Not Found", status: 404 });
+    }
+
+    if (user._id.toString() !== req.user.id) {
+      success = false;
+      return res.send({ success, error: "This is not allowed", status: 401 })
+    }
+
+    let {image} = req.body;
+    
+    let profilepic = "";
+
+    if (req.body.image) {
+      profilepic = image;
+    }
+
+    user.about.profilepic = profilepic;
+    const savedUser = await user.save();
+    success = true;
+    res.send({ success, savedUser, status: 200 });
+  } catch (error) {
+    success = false;
+    res.send({ success, error: error.message, status: 500 });
+  }
+});
+
 module.exports = router;
